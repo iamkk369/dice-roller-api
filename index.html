@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless Dice Roller SaaS Dashboard | Khilan Kumar Rajput</title>
+
+    <!-- FontAwesome 6 Icons & Inter/JetBrains Mono Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #030712;
+            --bg-card: rgba(15, 23, 42, 0.75);
+            --bg-card-hover: rgba(30, 41, 59, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(56, 189, 248, 0.35);
+
+            /* Skin Dynamic Colors - Default (Cyan) */
+            --dice-skin-primary: #0ea5e9;
+            --dice-skin-secondary: #2563eb;
+            --dice-skin-glow: rgba(56, 189, 248, 0.5);
+            --dice-skin-text: #ffffff;
+
+            --cyan-accent: #38bdf8;
+            --indigo-accent: #6366f1;
+            --purple-accent: #a855f7;
+            --emerald-accent: #10b981;
+            --amber-accent: #f59e0b;
+            --rose-accent: #f43f5e;
+
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-sub: #64748b;
+            --terminal-bg: #020617;
+
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-sans);
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 85% 75%, rgba(56, 189, 248, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.06) 0%, transparent 60%);
+            background-attachment: fixed;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track { background: rgba(3, 7, 18, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cyan-accent); }
+
+        nav {
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 14px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 19px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.4px;
+            text-decoration: none;
+        }
+
+        .brand-logo i {
+            color: var(--cyan-accent);
+            font-size: 24px;
+            filter: drop-shadow(0 0 10px var(--cyan-glow));
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.4)); }
+            100% { filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.9)); }
+        }
+
+        .badge-aws {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--cyan-accent);
+            border: 1px solid var(--border-glow);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-aws i { font-size: 10px; color: var(--emerald-accent); }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .env-selector {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-glass);
+            color: #cbd5e1;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .env-selector:hover {
+            border-color: var(--cyan-accent);
+        }
+
+        .sound-toggle {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sound-toggle:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+        .sound-toggle.active { color: var(--emerald-accent); border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.12); }
+
+        .btn-nav {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            padding: 9px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-nav:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-nav.primary {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
+        }
+
+        .btn-nav.primary:hover {
+            box-shadow: 0 8px 24px rgba(2, 132, 199, 0.55);
+            filter: brightness(1.1);
+        }
+
+        .container {
+            max-width: 1540px;
+            margin: 0 auto;
+            padding: 30px 40px;
+            width: 100%;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 390px 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1120px) {
+            .container { grid-template-columns: 1fr; padding: 20px; }
+            nav { padding: 14px 20px; flex-wrap: wrap; gap: 12px; }
+        }
+
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--border-glass);
+            padding: 26px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            margin-bottom: 22px;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 16px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title i { color: var(--cyan-accent); }
+        .panel-subtitle { font-size: 12px; color: var(--text-sub); margin-top: 4px; font-weight: 500; }
+
+        .form-group { margin-bottom: 20px; }
+
+        label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+
+        .label-val { color: var(--cyan-accent); font-family: var(--font-mono); font-size: 12px; }
+
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: 14px;
+            border: 1px solid var(--border-glass);
+            background: rgba(2, 6, 23, 0.8);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--cyan-accent);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+            background: rgba(2, 6, 23, 0.95);
+        }
+
+        /* Preset Buttons & Skin Theme Switcher */
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-preset {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            padding: 8px 4px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .btn-preset:hover, .btn-preset.active {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: var(--cyan-accent);
+            color: var(--cyan-accent);
+        }
+
+        .skin-picker {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .skin-swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .skin-swatch.active {
+            transform: scale(1.15);
+            border-color: #ffffff;
+            box-shadow: 0 0 12px var(--dice-skin-glow);
+        }
+
+        .skin-cyan { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
+        .skin-amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .skin-ruby { background: linear-gradient(135deg, #f43f5e, #be123c); }
+        .skin-matrix { background: linear-gradient(135deg, #10b981, #047857); }
+
+        .dice-info-box {
+            font-size: 12.5px;
+            color: var(--cyan-accent);
+            margin-top: 10px;
+            line-height: 1.5;
+            padding: 10px 14px;
+            background: rgba(56, 189, 248, 0.06);
+            border-radius: 12px;
+            border-left: 3px solid var(--cyan-accent);
+        }
+
+        .btn-roll {
+            width: 100%;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: white;
+            box-shadow: 0 6px 24px rgba(2, 132, 199, 0.4);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            letter-spacing: -0.2px;
+        }
+
+        .btn-roll:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 32px rgba(2, 132, 199, 0.6);
+            filter: brightness(1.1);
+        }
+
+        .btn-roll:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .stage-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .dice-viewport {
+            background: radial-gradient(circle at center, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.95));
+            border-radius: 24px;
+            border: 1px solid var(--border-glass);
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 36px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.8);
+        }
+
+        .viewport-bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+        }
+
+        .crit-banner {
+            position: absolute;
+            top: 20px;
+            padding: 8px 24px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 10;
+            animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .crit-banner.crit-hit {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            border: 1px solid #34d399;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+        }
+
+        .crit-banner.crit-fail {
+            background: linear-gradient(135deg, #f43f5e, #e11d48);
+            color: #fff;
+            border: 1px solid #fb7185;
+            box-shadow: 0 0 30px rgba(244, 63, 94, 0.6);
+        }
+
+        .dice-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            z-index: 2;
+            perspective: 1200px;
+        }
+
+        /* 3D Realistic D6 Dice */
+        .real-dice-d6 {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(145deg, #ffffff, #e2e8f0);
+            border-radius: 20px;
+            box-shadow:
+                0 18px 30px rgba(0,0,0,0.6),
+                inset 0 -5px 8px rgba(0,0,0,0.18),
+                inset 0 4px 6px rgba(255,255,255,0.9);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 12px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+
+        .real-dice-d6.skinned {
+            background: linear-gradient(145deg, var(--dice-skin-primary), var(--dice-skin-secondary));
+            box-shadow: 0 14px 28px var(--dice-skin-glow);
+        }
+
+        .real-dice-d6 .pip {
+            background: #0f172a;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            justify-self: center;
+            align-self: center;
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.5);
+        }
+
+        .real-dice-d6.skinned .pip {
+            background: var(--dice-skin-text);
+            box-shadow: 0 0 6px rgba(255,255,255,0.8);
+        }
+
+        /* Polyhedral Dice */
+        .real-dice-poly {
+            width: 84px;
+            height: 84px;
+            background: linear-gradient(135deg, var(--dice-skin-primary), var(--dice-skin-secondary));
+            color: var(--dice-skin-text);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 26px;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.5);
+            box-shadow: 0 14px 28px var(--dice-skin-glow);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .poly-badge {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            opacity: 0.85;
+            letter-spacing: 0.5px;
+            margin-top: -2px;
+        }
+
+        .rolling {
+            animation: throw3DRoll 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes throw3DRoll {
+            0% { transform: scale(0.1) rotateX(1080deg) rotateY(720deg) translateY(-250px); opacity: 0; }
+            70% { transform: scale(1.2) rotateX(-90deg) rotateY(-45deg) translateY(10px); opacity: 1; }
+            100% { transform: scale(1) rotateX(0deg) rotateY(0deg) translateY(0); opacity: 1; }
+        }
+
+        /* Stats Cards Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 18px;
+            border: 1px solid var(--border-glass);
+            padding: 18px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-sub);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .stat-val {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--emerald-accent);
+            margin-top: 4px;
+            font-family: var(--font-mono);
+        }
+
+        .stat-card.cyan .stat-val { color: var(--cyan-accent); }
+        .stat-card.purple .stat-val { color: var(--purple-accent); }
+        .stat-card.amber .stat-val { color: var(--amber-accent); }
+
+        .chart-card { padding: 20px 24px; }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .bars-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 95px;
+            padding-top: 10px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .bar-fill {
+            width: 100%;
+            background: linear-gradient(180deg, var(--cyan-accent), var(--indigo-accent));
+            border-radius: 6px 6px 0 0;
+            transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            min-height: 4px;
+            position: relative;
+        }
+
+        .bar-fill:hover::after {
+            content: attr(data-count);
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: var(--font-mono);
+        }
+
+        .bar-val { font-size: 10px; color: var(--text-sub); font-family: var(--font-mono); }
+
+        /* Tabs & Terminal Styling */
+        .tabs-header {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
+        .tab-btn.active {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--cyan-accent);
+            border: 1px solid var(--border-glow);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .terminal-box {
+            background: var(--terminal-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #38bdf8;
+            height: 200px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .log-line { margin-bottom: 6px; display: flex; gap: 10px; font-size: 11.5px; }
+        .log-ts { color: var(--text-sub); }
+        .log-info { color: #38bdf8; }
+        .log-success { color: var(--emerald-accent); }
+        .log-warn { color: var(--amber-accent); }
+        .log-purple { color: var(--purple-accent); }
+
+        .code-box {
+            background: var(--terminal-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #cbd5e1;
+            position: relative;
+            max-height: 200px;
+            overflow: auto;
+            white-space: pre-wrap;
+        }
+
+        .btn-copy-code {
+            position: absolute;
+            top: 12px; right: 12px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .btn-copy-code:hover { background: var(--cyan-accent); color: #000; }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: rgba(2, 6, 23, 0.6);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .history-badge {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--indigo-accent);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        /* Modal Popup System */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: #090d16;
+            border: 1px solid var(--border-glass);
+            border-radius: 28px;
+            padding: 36px;
+            max-width: 640px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 22px; right: 22px;
+            background: rgba(255,255,255,0.06);
+            border: none;
+            color: var(--text-muted);
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .modal-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        footer {
+            border-top: 1px solid var(--border-glass);
+            padding: 24px 40px;
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 13px;
+            margin-top: 40px;
+            background: rgba(2, 6, 23, 0.5);
+        }
+
+        footer b { color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#" class="brand-logo">
+            <i class="fa-solid fa-dice-d20"></i> Dice Roller API
+            <span class="badge-aws"><i class="fa-solid fa-bolt"></i> AWS Serverless</span>
+        </a>
+        <div class="nav-actions">
+            <!-- Environment Selector -->
+            <select class="env-selector" id="envSelect" onchange="switchEnv()">
+                <option value="prod"><i class="fa-solid fa-cloud"></i> ☁️ AWS Production API</option>
+                <option value="local">💻 Local SAM API</option>
+                <option value="sim">⚡ Local Simulation</option>
+            </select>
+
+            <!-- Sound Toggle -->
+            <button class="sound-toggle active" id="soundBtn" onclick="toggleSound()" title="Toggle Web Audio FX">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
+            <button class="btn-nav" onclick="openModal('archModal')"><i class="fa-solid fa-network-wired"></i> Architecture</button>
+            <button class="btn-nav primary" onclick="openModal('devModal')"><i class="fa-solid fa-code"></i> Developer Profile</button>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Left Panel: Roll Controls & Execution Workbench -->
+        <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fa-solid fa-sliders"></i> Roll Configuration</div>
+                    <div class="panel-subtitle">Payload parameters for AWS Lambda execution</div>
+                </div>
+
+                <!-- Dice Type Select -->
+                <div class="form-group">
+                    <label>
+                        <span>Dice Type / Geometry</span>
+                        <span class="label-val" id="sidesDisplay">D6</span>
+                    </label>
+                    <select id="sides" onchange="updateDiceInfo()">
+                        <option value="6" selected>D6 (Standard Dots Cube)</option>
+                        <option value="4">D4 (Tetrahedron)</option>
+                        <option value="8">D8 (Octahedron)</option>
+                        <option value="10">D10 (Pentagonal Trapezohedron)</option>
+                        <option value="12">D12 (Dodecahedron)</option>
+                        <option value="20">D20 (Icosahedron / RPG Core)</option>
+                        <option value="100">D100 (Percentile)</option>
+                    </select>
+
+                    <!-- Presets -->
+                    <div class="presets-grid">
+                        <button class="btn-preset active" onclick="selectPreset(6)">D6</button>
+                        <button class="btn-preset" onclick="selectPreset(8)">D8</button>
+                        <button class="btn-preset" onclick="selectPreset(20)">D20</button>
+                        <button class="btn-preset" onclick="selectPreset(100)">D100</button>
+                    </div>
+
+                    <div id="dice-info" class="dice-info-box">D6: Standard 6-sided die rendered with realistic 3D dot patterns.</div>
+                </div>
+
+                <!-- Dice Quantity -->
+                <div class="form-group">
+                    <label>
+                        <span>Quantity (1 - 10)</span>
+                        <span class="label-val" id="countVal">3</span>
+                    </label>
+                    <input type="number" id="count" value="3" min="1" max="10" oninput="updateCountVal()">
+                </div>
+
+                <!-- Modifier / Bonus Input (from Image 2) -->
+                <div class="form-group">
+                    <label>
+                        <span>Modifier / Bonus (-5 to +10)</span>
+                        <span class="label-val" id="modVal">+0</span>
+                    </label>
+                    <input type="number" id="modifier" value="0" min="-5" max="10" oninput="updateModVal()">
+                </div>
+
+                <!-- Dice Skin Theme Selector (from Image 2) -->
+                <div class="form-group">
+                    <label><span>Dice Skin Theme</span></label>
+                    <div class="skin-picker">
+                        <div class="skin-swatch skin-cyan active" title="Cyan Neon" onclick="setDiceSkin('cyan', this)"></div>
+                        <div class="skin-swatch skin-amber" title="Amber Gold" onclick="setDiceSkin('amber', this)"></div>
+                        <div class="skin-swatch skin-ruby" title="Ruby Red" onclick="setDiceSkin('ruby', this)"></div>
+                        <div class="skin-swatch skin-matrix" title="Matrix Green" onclick="setDiceSkin('matrix', this)"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn-roll" id="rollBtn" onclick="rollDice()"><i class="fa-solid fa-dice"></i> Execute Roll via API</button>
+            </div>
+        </div>
+
+        <!-- Right Main Stage & Analytics Grid -->
+        <div class="stage-section">
+
+            <!-- Main Interactive Dice Canvas Viewport -->
+            <div class="dice-viewport">
+                <div class="viewport-bg-grid"></div>
+
+                <!-- Critical Hit / Fail Banner -->
+                <div id="critBanner" class="crit-banner">NATURAL 20! CRITICAL HIT</div>
+
+                <div id="dice-container" class="dice-container">
+                    <div style="color: var(--text-sub);">Configure your dice and execute a roll to see results.</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">RAW SUM</div>
+                    <div id="stat-raw" class="stat-val">--</div>
+                </div>
+                <div class="stat-card cyan">
+                    <div class="stat-label">FINAL TOTAL (+MOD)</div>
+                    <div id="stat-total" class="stat-val">--</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-label">AVERAGE VALUE</div>
+                    <div id="stat-avg" class="stat-val">--</div>
+                </div>
+                <div class="stat-card amber">
+                    <div class="stat-label">MIN / MAX RANGE</div>
+                    <div id="stat-range" class="stat-val">--</div>
+                </div>
+            </div>
+
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <div class="panel-title" style="font-size: 14px;"><i class="fa-solid fa-chart-column"></i> Outcome Distribution Chart</div>
+                    <span style="font-size: 11px; color: var(--text-sub);">Frequency of rolled values</span>
+                </div>
+                <div class="bars-container" id="barsContainer">
+                    <!-- Dynamic Bars -->
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="tabs-header">
+                    <button class="tab-btn active" onclick="switchTab('logsTab', this)"><i class="fa-solid fa-terminal"></i> Activity Log</button>
+                    <button class="tab-btn" onclick="switchTab('curlTab', this)"><i class="fa-solid fa-code"></i> cURL & REST Payload</button>
+                    <button class="tab-btn" onclick="switchTab('jsonTab', this)"><i class="fa-solid fa-file-code"></i> REST JSON Inspector</button>
+                    <button class="tab-btn" onclick="switchTab('historyTab', this)"><i class="fa-solid fa-clock-rotate-left"></i> Roll History</button>
+                </div>
+
+                <!-- Tab 1: Browser activity log -->
+                <div id="logsTab" class="tab-content active">
+                    <div class="terminal-box" id="terminalLog">
+                        <div class="log-line"><span class="log-ts">[INIT]</span> <span class="log-info">Dashboard ready. Select an execution environment to begin.</span></div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: cURL Workbench -->
+                <div id="curlTab" class="tab-content">
+                    <div class="code-box">
+                        <button class="btn-copy-code" onclick="copyCurl()"><i class="fa-solid fa-copy"></i> Copy cURL</button>
+                        <span id="curlDisplay" style="color: var(--cyan-accent);">curl.exe "https://2zq6v2rx1b.execute-api.us-east-1.amazonaws.com/Prod/roll?sides=6&count=3"</span>
+                    </div>
+                </div>
+
+                <!-- Tab 3: JSON Inspector -->
+                <div id="jsonTab" class="tab-content">
+                    <div class="code-box">
+                        <button class="btn-copy-code" onclick="copyJson()"><i class="fa-solid fa-copy"></i> Copy Response</button>
+                        <span id="jsonDisplay" style="color: #cbd5e1;">{}</span>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Roll History & CSV Export -->
+                <div id="historyTab" class="tab-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 12px; color: var(--text-muted);">Session Executions</span>
+                        <button class="btn-nav" onclick="exportHistoryCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div style="color: var(--text-sub); font-size: 13px; text-align: center; padding: 16px;">No execution history recorded yet.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- AWS Architecture Modal -->
+    <div class="modal-overlay" id="archModal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal('archModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color: var(--cyan-accent); font-size: 20px; margin-bottom: 10px;"><i class="fa-solid fa-diagram-project"></i> AWS Serverless Architecture</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.6; margin-bottom: 20px;">
+                A serverless dice API exposed through Amazon API Gateway and executed by AWS Lambda.
+            </p>
+            <ul style="color: var(--text-muted); font-size: 13.5px; line-height: 1.8; margin-left: 20px; margin-bottom: 24px;">
+                <li><b>Amazon API Gateway:</b> Routes GET /roll requests to the Lambda function; CORS is enabled for browser access.</li>
+                <li><b>AWS Lambda (Node.js 24.x):</b> Validates query parameters and generates rolls using Node.js cryptographic randomness.</li>
+                <li><b>AWS CloudWatch Logs:</b> AWS captures Lambda runtime logs; the dashboard activity panel is a local UI log, not a live CloudWatch stream.</li>
+                <li><b>AWS SAM (Serverless Application Model):</b> IaC template automation for reproducible cloud deployment.</li>
+            </ul>
+            <button class="btn-nav primary" style="width: 100%; justify-content: center;" onclick="closeModal('archModal')">Close Architecture</button>
+        </div>
+    </div>
+
+    <!-- Developer Profile Modal -->
+    <div class="modal-overlay" id="devModal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal('devModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color: var(--cyan-accent); font-size: 20px; margin-bottom: 18px;"><i class="fa-solid fa-user-gear"></i> Developer Profile</h3>
+            <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 20px;">
+                <div style="width: 64px; height: 64px; border-radius: 18px; background: linear-gradient(135deg, var(--cyan-accent), var(--indigo-accent)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 24px; color: #fff; box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3);">KK</div>
+                <div>
+                    <h4 style="font-size: 19px; color: #fff;">Khilankumar Rajput</h4>
+                    <p style="color: var(--cyan-accent); font-size: 13px; font-weight: 500;">CS & Engineering Student | Cloud Developer</p>
+                    <p style="color: var(--text-sub); font-size: 12px; margin-top: 2px;">Laxmi Institute of Technology, Sarigam</p>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.62; margin-bottom: 24px;">
+                Continuously learning new technologies, developing cloud-native microservices, serverless APIs, and modern responsive user interfaces.
+            </p>
+            <div style="display: flex; gap: 14px;">
+                <a href="https://github.com/iamkk369" target="_blank" class="btn-nav" style="flex: 1; justify-content: center;"><i class="fa-brands fa-github"></i> GitHub</a>
+                <a href="https://www.linkedin.com/in/khilankumar-r-490369329" target="_blank" class="btn-nav primary" style="flex: 1; justify-content: center;"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Made with ❤️ by <b>Khilankumar Rajput (iamkk369)</b> | Laxmi Institute of Technology, Sarigam | Continuously learning new technologies and exploring Cloud Computing.
+    </footer>
+
+    <script>
+        const descriptions = {
+            "4": "D4: Tetrahedron pyramid die. Ideal for minor damage rolls.",
+            "6": "D6: Standard 6-sided die rendered with realistic 3D dot patterns.",
+            "8": "D8: Octahedron 8-sided diamond die.",
+            "10": "D10: Pentagonal Trapezohedron for specialized RPG percentile tables.",
+            "12": "D12: Dodecahedron 12-sided gaming die.",
+            "20": "D20: Icosahedron! Iconic RPG core d20 die for critical hits.",
+            "100": "D100: Percentile 100-sided die."
+        };
+
+        const d6PipPositions = {
+            1: [4],
+            2: [0, 8],
+            3: [0, 4, 8],
+            4: [0, 2, 6, 8],
+            5: [0, 2, 4, 6, 8],
+            6: [0, 2, 3, 5, 6, 8]
+        };
+
+        const skins = {
+            cyan: { primary: '#0ea5e9', secondary: '#2563eb', glow: 'rgba(56, 189, 248, 0.5)', text: '#ffffff' },
+            amber: { primary: '#f59e0b', secondary: '#d97706', glow: 'rgba(245, 158, 11, 0.5)', text: '#ffffff' },
+            ruby: { primary: '#f43f5e', secondary: '#be123c', glow: 'rgba(244, 63, 94, 0.5)', text: '#ffffff' },
+            matrix: { primary: '#10b981', secondary: '#047857', glow: 'rgba(16, 185, 129, 0.5)', text: '#ffffff' }
+        };
+
+        let soundEnabled = true;
+        let history = [];
+        let sessionRolls = [];
+        const API_ENDPOINTS = {
+            prod: "https://2zq6v2rx1b.execute-api.us-east-1.amazonaws.com/Prod/roll",
+            local: "http://127.0.0.1:3000/roll"
+        };
+
+        // Web Audio Synthesizer for Realistic Sound Effects
+        function playRollSound() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                for (let i = 0; i < 6; i++) {
+                    setTimeout(() => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+                        osc.frequency.setValueAtTime(140 + Math.random() * 220, ctx.currentTime);
+                        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.07);
+                    }, i * 75);
+                }
+            } catch (e) {
+                console.log("Audio API deferred.");
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById("soundBtn");
+            btn.classList.toggle("active", soundEnabled);
+            btn.innerHTML = soundEnabled ? `<i class="fa-solid fa-volume-high"></i>` : `<i class="fa-solid fa-volume-xmark"></i>`;
+        }
+
+        function setDiceSkin(skinName, el) {
+            document.querySelectorAll(".skin-swatch").forEach(s => s.classList.remove("active"));
+            el.classList.add("active");
+
+            const skin = skins[skinName];
+            document.documentElement.style.setProperty('--dice-skin-primary', skin.primary);
+            document.documentElement.style.setProperty('--dice-skin-secondary', skin.secondary);
+            document.documentElement.style.setProperty('--dice-skin-glow', skin.glow);
+            document.documentElement.style.setProperty('--dice-skin-text', skin.text);
+
+            logToTerminal(`Applied skin theme: ${skinName.toUpperCase()}`, 'info');
+        }
+
+        function selectPreset(sides) {
+            document.getElementById("sides").value = sides;
+            document.querySelectorAll(".btn-preset").forEach(b => {
+                b.classList.toggle("active", b.innerText === `D${sides}`);
+            });
+            updateDiceInfo();
+        }
+
+        function updateCountVal() {
+            const count = document.getElementById("count").value;
+            document.getElementById("countVal").innerText = count;
+            updateCurlPreview();
+        }
+
+        function updateModVal() {
+            const mod = parseInt(document.getElementById("modifier").value) || 0;
+            document.getElementById("modVal").innerText = (mod >= 0 ? `+${mod}` : `${mod}`);
+            updateCurlPreview();
+        }
+
+        function updateDiceInfo() {
+            const sides = document.getElementById("sides").value;
+            document.getElementById("sidesDisplay").innerText = `D${sides}`;
+            document.getElementById("dice-info").innerText = descriptions[sides] || "";
+            updateCurlPreview();
+        }
+
+        function updateCurlPreview() {
+            const sides = document.getElementById("sides").value;
+            const count = document.getElementById("count").value;
+            const env = document.getElementById("envSelect").value;
+            const endpoint = API_ENDPOINTS[env];
+            document.getElementById("curlDisplay").innerText = endpoin
+                ? `curl.exe "${endpoint}?sides=${sides}&count=${count}"`
+                : "Simulation mode does not send an API request.";
+        }
+
+        function switchEnv() {
+            const env = document.getElementById("envSelect").value;
+            const destination = env === "sim" ? "local simulation" : API_ENDPOINTS[env];
+            logToTerminal(`Execution environment set to ${destination}.`, 'purple');
+            updateCurlPreview();
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+            el.classList.add("active");
+            document.getElementById(tabId).classList.add("active");
+        }
+
+        function logToTerminal(msg, type = 'info') {
+            const terminal = document.getElementById("terminalLog");
+            const time = new Date().toLocaleTimeString();
+            const typeClass = type === 'success' ? 'log-success' : type === 'warn' ? 'log-warn' : type === 'purple' ? 'log-purple' : 'log-info';
+            const line = document.createElement("div");
+            line.className = "log-line";
+            const timestamp = document.createElement("span");
+            timestamp.className = "log-ts";
+            timestamp.textContent = `[${time}] `;
+            const message = document.createElement("span");
+            message.className = typeClass;
+            message.textContent = msg;
+            line.append(timestamp, message);
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function createD6Element(val) {
+            const die = document.createElement("div");
+            die.className = "real-dice-d6 skinned rolling";
+            const activePositions = d6PipPositions[val] || [];
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement("div");
+                if (activePositions.includes(i)) cell.className = "pip";
+                die.appendChild(cell);
+            }
+            return die;
+        }
+
+        function createPolyElement(val, sides) {
+            const die = document.createElement("div");
+            die.className = "real-dice-poly rolling";
+            die.innerHTML = `<span>${val}</span><span class="poly-badge">D${sides}</span>`;
+            return die;
+        }
+
+        function updateDistributionChart(rolls) {
+            sessionRolls.push(...rolls);
+            const container = document.getElementById("barsContainer");
+            container.innerHTML = "";
+
+            const freq = {};
+            sessionRolls.forEach(r => freq[r] = (freq[r] || 0) + 1);
+            const maxCount = Math.max(...Object.values(freq), 1);
+            const keys = Object.keys(freq).sort((a,b) => a - b);
+
+            keys.forEach(k => {
+                const count = freq[k];
+                const pct = (count / maxCount) * 100;
+                const wrapper = document.createElement("div");
+                wrapper.className = "bar-wrapper";
+                wrapper.innerHTML = `
+                    <div class="bar-fill" style="height: ${pct}%;" data-count="${count}x"></div>
+                    <div class="bar-val">${k}</div>
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+
+        async function rollDice() {
+            const sides = Number(document.getElementById("sides").value);
+            const count = Number(document.getElementById("count").value);
+            const modifier = Number(document.getElementById("modifier").value || 0);
+            const btn = document.getElementById("rollBtn");
+            const container = document.getElementById("dice-container");
+            const critBanner = document.getElementById("critBanner");
+            const env = document.getElementById("envSelect").value;
+
+            if (!Number.isInteger(sides) || sides < 2 || sides > 100
+                || !Number.isInteger(count) || count < 1 || count > 10
+                || !Number.isInteger(modifier) || modifier < -5 || modifier > 10) {
+                logToTerminal("Invalid roll settings. Check die, quantity, and modifier limits.", 'warn');
+                return;
+            }
+
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Rolling...`;
+            btn.disabled = true;
+            critBanner.style.display = "none";
+
+            playRollSound();
+            const reqId = crypto.randomUUID().slice(0, 8);
+            logToTerminal(`START RequestId: ${reqId} - GET /roll?sides=${sides}&count=${count}&mod=${modifier}`, 'purple');
+
+            const startTime = performance.now();
+
+            try {
+                let data;
+                if (env === "sim") {
+                    const simulatedRolls = Array.from({length: count}, () => Math.floor(Math.random() * sides) + 1);
+                    data = { sides, count, rolls: simulatedRolls };
+                } else {
+                    const endpoint = API_ENDPOINTS[env];
+                    const url = new URL(endpoint);
+                    url.searchParams.set("sides", sides);
+                    url.searchParams.set("count", count);
+                    const res = await fetch(url);
+                    data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || `API request failed with HTTP ${res.status}`);
+                    }
+                }
+
+                const endTime = performance.now();
+                const latency = Math.round(endTime - startTime);
+                const source = env === "sim" ? "Local simulation" : API_ENDPOINTS[env];
+                const responseData = {
+                    reqId,
+                    source,
+                    latencyMs: latency,
+                    ...data,
+                    modifier,
+                    rawSum: data.total ?? data.rolls.reduce((sum, roll) => sum + roll, 0),
+                    finalTotal: (data.total ?? data.rolls.reduce((sum, roll) => sum + roll, 0)) + modifier
+                };
+
+                document.getElementById("jsonDisplay").innerText = JSON.stringify(responseData, null, 2);
+
+                container.innerHTML = "";
+                data.rolls.forEach((val, idx) => {
+                    const die = (sides === 6) ? createD6Element(val) : createPolyElement(val, sides);
+                    die.style.animationDelay = `${idx * 0.05}s`;
+                    container.appendChild(die);
+                });
+
+                // Check Criticals for D20
+                if (sides === 20) {
+                    if (data.rolls.includes(20)) {
+                        critBanner.className = "crit-banner crit-hit";
+                        critBanner.innerText = "NATURAL 20! CRITICAL HIT 🎯";
+                        critBanner.style.display = "block";
+                    } else if (data.rolls.includes(1)) {
+                        critBanner.className = "crit-banner crit-fail";
+                        critBanner.innerText = "NATURAL 1! CRITICAL FAIL 💥";
+                        critBanner.style.display = "block";
+                    }
+                }
+
+                const rolls = data.rolls;
+                const rawSum = data.total ?? rolls.reduce((a,b) => a+b, 0);
+                const finalTotal = rawSum + modifier;
+                const avg = (rawSum / rolls.length).toFixed(1);
+                const min = Math.min(...rolls);
+                const max = Math.max(...rolls);
+
+                document.getElementById("stat-raw").innerText = rawSum;
+                document.getElementById("stat-total").innerText = finalTotal;
+                document.getElementById("stat-avg").innerText = avg;
+                document.getElementById("stat-range").innerText = `${min} / ${max}`;
+
+                updateDistributionChart(rolls);
+
+                logToTerminal(
+                    env === "sim"
+                        ? `SIMULATION complete | Duration: ${latency}ms`
+                        : `HTTP 200 OK | Latency: ${latency}ms`,
+                    'success'
+                );
+                logToTerminal(`Output Array: [${rolls.join(", ")}] Raw: ${rawSum} Final (+Mod): ${finalTotal}`);
+
+                history.unshift({ time: new Date().toLocaleTimeString(), sides, count, modifier, finalTotal, rolls });
+                renderHistory();
+
+            } catch (err) {
+                document.getElementById("jsonDisplay").innerText = JSON.stringify({
+                    reqId,
+                    source: env === "sim" ? "Local simulation" : API_ENDPOINTS[env],
+                    error: err.message
+                }, null, 2);
+                logToTerminal(`ERROR Execution error: ${err.message}`, 'warn');
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-dice"></i> Execute Roll via API`;
+                btn.disabled = false;
+            }
+        }
+
+        function renderHistory() {
+            const list = document.getElementById("historyList");
+            if (history.length === 0) return;
+
+            list.innerHTML = history.slice(0, 8).map(item => `
+                <div class="history-item">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="history-badge">${item.count}xD${item.sides}${item.modifier ? (item.modifier > 0 ? '+'+item.modifier : item.modifier) : ''}</span>
+                        <span style="color: var(--text-muted); font-size: 12px;">${item.time}</span>
+                    </div>
+                    <div style="font-weight: 700; color: var(--emerald-accent); font-family: var(--font-mono);">
+                        Total: ${item.finalTotal} <span style="font-size: 11px; color: var(--text-sub); font-weight: 400;">[${item.rolls.join(',')}]</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function exportHistoryCSV() {
+            if (history.length === 0) {
+                alert("No roll history to export yet.");
+                return;
+            }
+            let csv = "Timestamp,DiceType,Quantity,Modifier,FinalTotal,Rolls\n";
+            history.forEach(h => {
+                csv += `"${h.time}","D${h.sides}",${h.count},${h.modifier},${h.finalTotal},"${h.rolls.join('-')}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dice_roll_history_${Date.now()}.csv`;
+            a.click();
+            logToTerminal("Exported roll history to CSV file", 'success');
+        }
+
+        function copyCurl() {
+            const text = document.getElementById("curlDisplay").innerText;
+            if (!navigator.clipboard?.writeText) {
+                logToTerminal("Clipboard access is unavailable in this browser context.", 'warn');
+                return;
+            }
+            navigator.clipboard.writeText(text)
+                .then(() => logToTerminal("cURL command copied to clipboard", 'info'))
+                .catch((err) => logToTerminal(`Clipboard copy failed: ${err.message}`, 'warn'));
+        }
+
+        function copyJson() {
+            const text = document.getElementById("jsonDisplay").innerText;
+            if (!navigator.clipboard?.writeText) {
+                logToTerminal("Clipboard access is unavailable in this browser context.", 'warn');
+                return;
+            }
+            navigator.clipboard.writeText(text)
+                .then(() => logToTerminal("JSON response copied to clipboard", 'info'))
+                .catch((err) => logToTerminal(`Clipboard copy failed: ${err.message}`, 'warn'));
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = "flex"; }
+        function closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+        window.onclick = function(e) {
+            if (e.target.classList.contains('modal-overlay')) e.target.style.display = "none";
+        }
+
+        // Ini
+        updateDiceInfo();
+    </script>
+</body>
+</html>

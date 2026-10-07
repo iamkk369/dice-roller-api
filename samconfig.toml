@@ -1,9 +1,9 @@
 version = 0.1
 
 [default.deploy.parameters]
-stack_name = "dice-roll-api"
+stack_name = "dice-roller-api"
 resolve_s3 = true
-s3_prefix = "dice-roll-api"
+s3_prefix = "dice-roller-api"
 region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"

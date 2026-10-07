@@ -59,7 +59,7 @@ The dashboard can use the deployed API, a local SAM API, or an explicitly select
 ## Project structure
 
 ```text
-dice-roll-api/
+dice-roller-api/
 ├── .gitignore
 ├── LICENSE
 ├── README.md
@@ -182,7 +182,7 @@ You can view the dashboard directly or serve it from VS Code:
 1. In File Explorer, open the project folder and double-click `frontend/index.html`.
 2. The page opens in your default browser. This is suitable for viewing the interface.
 
-If the webpage does not open or display when you double-click it, open PowerShell in the project root (`dice-roll-api`) and run this command to launch the dashboard in your default browser:
+If the webpage does not open or display when you double-click it, open PowerShell in the project root (`dice-roller-api`) and run this command to launch the dashboard in your default browser:
 
 ```powershell
 Start-Process .\frontend\index.html
@@ -214,7 +214,7 @@ sam deploy --guided
 SAM CLI prompts vary slightly by version and existing configuration. Typical answers for this project are:
 
 ```text
-Stack Name [sam-app]: dice-roll-api
+Stack Name [sam-app]: dice-roller-api
 AWS Region [us-east-1]: us-east-1
 Confirm changes before deploy [Y/n]: y
 Allow SAM CLI IAM role creation [Y/n]: y

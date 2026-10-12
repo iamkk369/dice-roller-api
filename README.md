@@ -60,11 +60,13 @@ The dashboard can use the deployed API, a local SAM API, or an explicitly select
 
 ```text
 dice-roller-api/
+├── .env.example
 ├── .gitignore
 ├── LICENSE
 ├── README.md
 ├── assets/
-│   └── dashboard-preview.png
+│   ├── dashboard-preview.png
+│   └── working-flow.png
 ├── samconfig.toml       # SAM deployment defaults
 ├── template.yaml        # AWS SAM resources and API route
 ├── frontend/
@@ -89,7 +91,7 @@ For local development, SAM can expose the same route at `http://127.0.0.1:3000/r
 
 The dashboard's environment selector routes requests to the configured production endpoint, the local SAM endpoint (`http://127.0.0.1:3000/roll`), or local simulation mode. Set `API_ENDPOINTS.prod` in `frontend/index.html` to the API URL emitted by your deployment when deploying a different stack. Simulation runs only when explicitly selected; API/network failures are displayed instead of quietly substituting simulated results.
 
-The API currently has no authentication and permits cross-origin requests from any origin (`Access-Control-Allow-Origin: *`), which is suitable only for a public demo. Before production use, add appropriate authentication, throttling/usage controls, and a restricted CORS policy.
+The API currently has no authentication and permits cross-origin requests from any origin (`Access-Control-Allow-Origin: *`), which is suitable only for a public demo. API Gateway throttling (10 requests/second, burst 20) and a WAF IP rate limit (500 requests per 5 minutes) are configured by `template.yaml`. Before production use, add appropriate authentication and a restricted CORS policy.
 
 ## Working flow
 

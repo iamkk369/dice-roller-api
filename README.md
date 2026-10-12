@@ -91,6 +91,12 @@ The dashboard's environment selector routes requests to the configured productio
 
 The API currently has no authentication and permits cross-origin requests from any origin (`Access-Control-Allow-Origin: *`), which is suitable only for a public demo. Before production use, add appropriate authentication, throttling/usage controls, and a restricted CORS policy.
 
+## Working flow
+
+The following diagram shows how a roll request travels from the dashboard user through the browser, API Gateway, and the Lambda function:
+
+![Dice Roller API working flow](assets/working-flow.png)
+
 ## Prerequisites
 
 Install the following tools:

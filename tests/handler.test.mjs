@@ -35,12 +35,11 @@ test("returns the requested number of rolls within the selected range", async ()
     );
 });
 
-test("caps the number of rolls at ten", async () => {
+test("rejects the number of rolls above ten instead of silently capping", async () => {
     const response = await invoke({ sides: "6", count: "11" });
 
-    assert.equal(response.statusCode, 200);
-    assert.equal(response.body.count, 10);
-    assert.equal(response.body.rolls.length, 10);
+    assert.equal(response.statusCode, 400);
+    assert.match(response.body.error, /count must be an integer between 1 and 10/);
 });
 
 test("rejects sides outside the supported integer range", async () => {
@@ -57,4 +56,48 @@ test("rejects invalid roll counts", async () => {
         assert.equal(response.statusCode, 400, `count=${count}`);
         assert.match(response.body.error, /count must be a positive integer/);
     }
+});
+
+test("rejects type-coercion bypasses for sides and count", async () => {
+    const bypassInputs = [
+        { sides: ["6"], count: "1" },
+        { sides: "0x6", count: "1" },
+        { sides: "6.0", count: "1" },
+        { sides: "", count: "1" },
+        { sides: "6", count: ["1"] },
+        { sides: "6", count: "0x2" },
+        { sides: "6", count: "" },
+        { sides: { toString: () => "6" }, count: "1" },
+    ];
+
+    for (const query of bypassInputs) {
+        const response = await invoke(query);
+        assert.equal(response.statusCode, 400, JSON.stringify(query));
+    }
+});
+
+test("handles preflight requests with CORS headers", async () => {
+    const response = await handler({
+        httpMethod: "OPTIONS",
+        headers: { origin: "https://example.com" },
+    });
+
+    assert.equal(response.statusCode, 204);
+    assert.ok(response.headers["Access-Control-Allow-Origin"]);
+    assert.match(
+        response.headers["Access-Control-Allow-Methods"],
+        /GET,OPTIONS/
+    );
+});
+
+test("returns security headers on API responses", async () => {
+    const response = await handler({
+        httpMethod: "GET",
+        queryStringParameters: { sides: "6", count: "1" },
+    });
+
+    assert.equal(response.headers["X-Content-Type-Options"], "nosniff");
+    assert.equal(response.headers["X-Frame-Options"], "DENY");
+    assert.equal(response.headers["Referrer-Policy"], "no-referrer");
+    assert.equal(response.headers["Cache-Control"], "no-store");
 });
